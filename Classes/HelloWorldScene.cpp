@@ -101,19 +101,27 @@ bool HelloWorld::init()
     }
 
     // add "HelloWorld" splash screen"
-    auto sprite = Sprite::create("HelloWorld.png");
-    if (sprite == nullptr)
+     _sprite = Sprite::create("HelloWorld.png");
+    if (_sprite == nullptr)
     {
         problemLoading("'HelloWorld.png'");
     }
     else
     {
         // position the sprite on the center of the screen
-        sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
+        _sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
 
         // add the sprite as a child to this layer
-        this->addChild(sprite, 0);
+        this->addChild(_sprite, 0);
     }
+
+    srand((unsigned int)time(nullptr));
+    this->schedule(SEL_SCHEDULE(&HelloWorld::addMonster), 1.5);
+    
+    auto eventListener = EventListenerTouchOneByOne::create();
+    eventListener->onTouchBegan = CC_CALLBACK_2(HelloWorld::onTouchBegan, this);
+    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(eventListener, _sprite);
+
     return true;
 }
 
@@ -129,4 +137,53 @@ void HelloWorld::menuCloseCallback(Ref* pSender)
     //_eventDispatcher->dispatchEvent(&customEndEvent);
 
 
+}
+
+void HelloWorld::addMonster(float dt)
+{
+    auto monster = Sprite::create("Monster.png");
+
+    auto monsterContentSize = monster->getContentSize();
+    auto selfContentSize = this->getContentSize();
+    int minY = monsterContentSize.height / 2;
+    int maxY = selfContentSize.height - monsterContentSize.height / 2;
+    int rangeY = maxY - minY;
+    int randomY = (rand() % rangeY) + minY;
+
+    monster->setPosition(Vec2(selfContentSize.width + monsterContentSize.width / 2, randomY));
+    this->addChild(monster);
+
+    int minDuration = 2.0;
+    int maxDuration = 4.0;
+    int rangeDuration = maxDuration - minDuration;
+    int randomDuration = (rand() % rangeDuration) + minDuration;
+
+    auto actionMove = MoveTo::create(randomDuration, Vec2(-monsterContentSize.width / 2, randomY));
+    auto actionRemove = RemoveSelf::create();
+    monster->runAction(Sequence::create(actionMove, actionRemove, nullptr));
+}
+
+bool HelloWorld::onTouchBegan(Touch* touch, Event* unused_event)
+{
+    Vec2 touchLocation = touch->getLocation();
+    Vec2 offset = touchLocation-_sprite->getPosition();
+    if (offset.x < 0)
+    {
+        return true;
+    }
+
+    auto projectile = Sprite::create("Projectile.png");
+    projectile->setPosition(_sprite->getPosition());
+    this->addChild(projectile);
+
+    offset.normalize();
+    auto shootAmount = offset * 1000;
+
+    auto realDest = shootAmount + projectile->getPosition();
+
+    auto actionMove = MoveTo::create(2.0f, realDest);
+    auto actionRemove = RemoveSelf::create();
+    projectile->runAction(Sequence::create(actionMove, actionRemove, nullptr));
+
+    return true;
 }
