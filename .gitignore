@@ -1,0 +1,19 @@
+#Visual Studio
+.vs/*
+*/.vs/*
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Debug/
+engine/
+
+#cocos2d-x
+cocos2d/
+proj.ios_mac/*
+proj.linux/*
+proj.win32/RCa07572
+Resources/res/
